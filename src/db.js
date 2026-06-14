@@ -24,6 +24,10 @@ async function init() {
       price_min INTEGER,
       price_max INTEGER,
       instagram TEXT,
+      email TEXT,
+      phone TEXT,
+      website TEXT,
+      keywords TEXT,
       avatar_url TEXT,
       created_at TEXT DEFAULT (datetime('now'))
     )
@@ -52,6 +56,29 @@ async function init() {
       created_at TEXT DEFAULT (datetime('now'))
     )
   `);
+
+  await db.execute(`
+    CREATE TABLE IF NOT EXISTS registrations (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      kind TEXT NOT NULL,           -- creator | brand
+      name TEXT NOT NULL,
+      email TEXT NOT NULL,
+      phone TEXT,
+      instagram TEXT,
+      website TEXT,
+      city TEXT,
+      type TEXT,
+      bio TEXT,
+      status TEXT NOT NULL DEFAULT 'new',  -- new | approved | rejected
+      created_at TEXT DEFAULT (datetime('now'))
+    )
+  `);
+
+  -- migrations: add columns if they don't exist yet
+  try { await db.execute("ALTER TABLE creators ADD COLUMN email TEXT"); } catch {}
+  try { await db.execute("ALTER TABLE creators ADD COLUMN phone TEXT"); } catch {}
+  try { await db.execute("ALTER TABLE creators ADD COLUMN website TEXT"); } catch {}
+  try { await db.execute("ALTER TABLE creators ADD COLUMN keywords TEXT"); } catch {}
 }
 
 module.exports = { db, init };

@@ -6,7 +6,7 @@ const { init } = require("./db");
 const app = express();
 app.use(cors({
   origin: "*",
-  methods: ["GET", "POST", "DELETE", "OPTIONS"],
+  methods: ["GET", "POST", "DELETE", "PATCH", "OPTIONS"],
   allowedHeaders: ["Content-Type", "Authorization"],
 }));
 app.use(express.json());
@@ -15,6 +15,7 @@ app.use(express.json());
 app.use("/creators", require("./routes/creators"));
 app.use("/brands", require("./routes/brands"));
 app.use("/works", require("./routes/works"));
+app.use("/register", require("./routes/registrations"));
 
 // Health check
 app.get("/", (req, res) => res.json({ ok: true, service: "Podium Rare API" }));

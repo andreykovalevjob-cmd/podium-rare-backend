@@ -7,7 +7,7 @@ const router = Router();
 // POST /creators — создать креатора (с опциональным аватаром)
 router.post("/", upload.single("avatar"), async (req, res) => {
   try {
-    const { name, bio, type, cities, price_min, price_max, instagram } =
+    const { name, bio, type, cities, price_min, price_max, instagram, email, phone, website, keywords } =
       req.body;
 
     if (!name || !type || !cities)
@@ -19,8 +19,8 @@ router.post("/", upload.single("avatar"), async (req, res) => {
     const avatar_url = req.file?.path ?? null;
 
     const result = await db.execute({
-      sql: `INSERT INTO creators (name, bio, type, cities, price_min, price_max, instagram, avatar_url)
-            VALUES (?,?,?,?,?,?,?,?)`,
+      sql: `INSERT INTO creators (name, bio, type, cities, price_min, price_max, instagram, email, phone, website, keywords, avatar_url)
+            VALUES (?,?,?,?,?,?,?,?,?,?,?,?)`,
       args: [
         name,
         bio ?? null,
@@ -29,6 +29,10 @@ router.post("/", upload.single("avatar"), async (req, res) => {
         price_min ?? null,
         price_max ?? null,
         instagram ?? null,
+        email ?? null,
+        phone ?? null,
+        website ?? null,
+        keywords ?? null,
         avatar_url,
       ],
     });
