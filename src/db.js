@@ -1,8 +1,13 @@
 const { createClient } = require("@libsql/client");
 const path = require("path");
+const fs = require("fs");
 
 // DB_PATH можно переопределить через env (по умолчанию — рядом с src/)
 const dbPath = process.env.DB_PATH || path.resolve(__dirname, "../podium.db");
+
+// Создаём папку если не существует
+const dbDir = path.dirname(dbPath);
+if (!fs.existsSync(dbDir)) fs.mkdirSync(dbDir, { recursive: true });
 
 const db = createClient({
   url: `file:${dbPath}`,
