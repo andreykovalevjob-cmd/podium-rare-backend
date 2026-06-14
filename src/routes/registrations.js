@@ -59,16 +59,65 @@ router.get("/", async (req, res) => {
 });
 
 // PATCH /register/:id — сменить статус (approved/rejected)
+// При approved — автоматически создаёт запись в creators или brands
 router.patch("/:id", async (req, res) => {
   try {
     const { status } = req.body;
     if (!["approved", "rejected", "new"].includes(status))
       return res.status(400).json({ error: "invalid status" });
 
+    // Получаем заявку
+    const { rows } = await db.execute({
+      sql: "SELECT * FROM registrations WHERE id = ?",
+      args: [req.params.id],
+    });
+    if (!rows.length) return res.status(404).json({ error: "Not found" });
+    const reg = rows[0];
+
+    // Обновляем статус
     await db.execute({
       sql: "UPDATE registrations SET status = ? WHERE id = ?",
       args: [status, req.params.id],
     });
+
+    // При апруве — создаём запись в нужной таблице (если ещё не создана)
+    if (status === "approved") {
+      if (reg.kind === "creator") {
+        const { rows: existing } = await db.execute({
+          sql: "SELECT id FROM creators WHERE email = ?",
+          args: [reg.email],
+        });
+        if (!existing.length) {
+          await db.execute({
+            sql: `INSERT INTO creators (name, bio, type, cities, instagram, email, phone, website)
+                  VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+            args: [
+              reg.name,
+              reg.bio ?? null,
+              reg.type || "ugc",
+              JSON.stringify(reg.city ? [reg.city] : []),
+              reg.instagram ?? null,
+              reg.email,
+              reg.phone ?? null,
+              reg.website ?? null,
+            ],
+          });
+        }
+      } else if (reg.kind === "brand") {
+        const { rows: existing } = await db.execute({
+          sql: "SELECT id FROM brands WHERE name = ?",
+          args: [reg.name],
+        });
+        if (!existing.length) {
+          await db.execute({
+            sql: `INSERT INTO brands (name, bio, website, instagram)
+                  VALUES (?, ?, ?, ?)`,
+            args: [reg.name, reg.bio ?? null, reg.website ?? null, reg.instagram ?? null],
+          });
+        }
+      }
+    }
+
     res.json({ ok: true });
   } catch (e) {
     res.status(500).json({ error: e.message });
