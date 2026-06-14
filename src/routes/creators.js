@@ -73,6 +73,36 @@ router.get("/", async (req, res) => {
   }
 });
 
+// PATCH /creators/:id — обновить аватар и/или поля
+router.patch("/:id", upload.single("avatar"), async (req, res) => {
+  try {
+    const { name, bio, type, cities, price_min, price_max, instagram, email, phone, website, keywords } = req.body;
+    const fields = [];
+    const args = [];
+
+    if (name)      { fields.push("name = ?");      args.push(name); }
+    if (bio != null){ fields.push("bio = ?");       args.push(bio); }
+    if (type)      { fields.push("type = ?");      args.push(type); }
+    if (cities)    { fields.push("cities = ?");    args.push(typeof cities === "string" ? cities : JSON.stringify(cities)); }
+    if (price_min) { fields.push("price_min = ?"); args.push(price_min); }
+    if (price_max) { fields.push("price_max = ?"); args.push(price_max); }
+    if (instagram) { fields.push("instagram = ?"); args.push(instagram); }
+    if (email)     { fields.push("email = ?");     args.push(email); }
+    if (phone)     { fields.push("phone = ?");     args.push(phone); }
+    if (website)   { fields.push("website = ?");   args.push(website); }
+    if (keywords)  { fields.push("keywords = ?");  args.push(keywords); }
+    if (req.file?.path) { fields.push("avatar_url = ?"); args.push(req.file.path); }
+
+    if (!fields.length) return res.status(400).json({ error: "Нечего обновлять" });
+
+    args.push(req.params.id);
+    await db.execute({ sql: `UPDATE creators SET ${fields.join(", ")} WHERE id = ?`, args });
+    res.json({ ok: true });
+  } catch (e) {
+    res.status(500).json({ error: e.message });
+  }
+});
+
 // GET /creators/:id
 router.get("/:id", async (req, res) => {
   try {
