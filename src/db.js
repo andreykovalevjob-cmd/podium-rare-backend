@@ -74,11 +74,11 @@ async function init() {
     )
   `);
 
-  -- migrations: add columns if they don't exist yet
-  try { await db.execute("ALTER TABLE creators ADD COLUMN email TEXT"); } catch {}
-  try { await db.execute("ALTER TABLE creators ADD COLUMN phone TEXT"); } catch {}
-  try { await db.execute("ALTER TABLE creators ADD COLUMN website TEXT"); } catch {}
-  try { await db.execute("ALTER TABLE creators ADD COLUMN keywords TEXT"); } catch {}
+  // migrations: add columns if they don't exist yet
+  try { await db.execute("ALTER TABLE creators ADD COLUMN email TEXT"); } catch (_) {}
+  try { await db.execute("ALTER TABLE creators ADD COLUMN phone TEXT"); } catch (_) {}
+  try { await db.execute("ALTER TABLE creators ADD COLUMN website TEXT"); } catch (_) {}
+  try { await db.execute("ALTER TABLE creators ADD COLUMN keywords TEXT"); } catch (_) {}
 }
 
 module.exports = { db, init };
