@@ -1,18 +1,21 @@
 const { Router } = require("express");
 const { db } = require("../db");
+const { upload } = require("../cloudinary");
 
 const router = Router();
 
-// POST /register/creator
-router.post("/creator", async (req, res) => {
+// POST /register/creator — принимает multipart (с аватаром) или JSON
+router.post("/creator", upload.single("avatar"), async (req, res) => {
   try {
     const { name, email, phone, instagram, website, city, type, bio } = req.body;
     if (!name || !email) return res.status(400).json({ error: "name and email are required" });
 
+    const avatar_url = req.file?.path ?? null;
+
     const result = await db.execute({
-      sql: `INSERT INTO registrations (kind, name, email, phone, instagram, website, city, type, bio)
-            VALUES ('creator',?,?,?,?,?,?,?,?)`,
-      args: [name, email, phone ?? null, instagram ?? null, website ?? null, city ?? null, type ?? null, bio ?? null],
+      sql: `INSERT INTO registrations (kind, name, email, phone, instagram, website, city, type, bio, avatar_url)
+            VALUES ('creator',?,?,?,?,?,?,?,?,?)`,
+      args: [name, email, phone ?? null, instagram ?? null, website ?? null, city ?? null, type ?? null, bio ?? null, avatar_url],
     });
 
     res.status(201).json({ ok: true, id: Number(result.lastInsertRowid) });
@@ -89,8 +92,8 @@ router.patch("/:id", async (req, res) => {
         });
         if (!existing.length) {
           await db.execute({
-            sql: `INSERT INTO creators (name, bio, type, cities, instagram, email, phone, website)
-                  VALUES (?, ?, ?, ?, ?, ?, ?, ?)`,
+            sql: `INSERT INTO creators (name, bio, type, cities, instagram, email, phone, website, avatar_url)
+                  VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)`,
             args: [
               reg.name,
               reg.bio ?? null,
@@ -100,6 +103,7 @@ router.patch("/:id", async (req, res) => {
               reg.email,
               reg.phone ?? null,
               reg.website ?? null,
+              reg.avatar_url ?? null,
             ],
           });
         }

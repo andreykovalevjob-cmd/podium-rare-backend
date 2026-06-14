@@ -79,6 +79,7 @@ async function init() {
   try { await db.execute("ALTER TABLE creators ADD COLUMN phone TEXT"); } catch (_) {}
   try { await db.execute("ALTER TABLE creators ADD COLUMN website TEXT"); } catch (_) {}
   try { await db.execute("ALTER TABLE creators ADD COLUMN keywords TEXT"); } catch (_) {}
+  try { await db.execute("ALTER TABLE registrations ADD COLUMN avatar_url TEXT"); } catch (_) {}
 }
 
 module.exports = { db, init };
