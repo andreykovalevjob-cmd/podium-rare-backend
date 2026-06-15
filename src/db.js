@@ -89,6 +89,29 @@ async function init() {
     )
   `);
 
+  await db.execute(`
+    CREATE TABLE IF NOT EXISTS offers (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      from_type TEXT NOT NULL,        -- creator | brand
+      from_id INTEGER NOT NULL,       -- id в таблице creators или brands
+      from_name TEXT NOT NULL,
+      to_type TEXT NOT NULL,          -- creator | brand
+      to_id INTEGER,                  -- id получателя (если известен)
+      to_name TEXT,
+      description TEXT,
+      location TEXT,
+      dates TEXT,
+      brief TEXT,
+      budget_min INTEGER,
+      budget_max INTEGER,
+      negotiable INTEGER DEFAULT 0,   -- 0 | 1
+      package TEXT,                   -- photo | video | mixed | custom
+      status TEXT NOT NULL DEFAULT 'new',  -- new | accepted | rejected | hold
+      notes TEXT,
+      created_at TEXT DEFAULT (datetime('now'))
+    )
+  `);
+
   // migrations: add columns if they don't exist yet
   try { await db.execute("ALTER TABLE creators ADD COLUMN email TEXT"); } catch (_) {}
   try { await db.execute("ALTER TABLE creators ADD COLUMN phone TEXT"); } catch (_) {}

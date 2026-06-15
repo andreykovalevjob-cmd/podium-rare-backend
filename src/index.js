@@ -18,6 +18,7 @@ app.use("/works", require("./routes/works"));
 app.use("/register", require("./routes/registrations"));
 app.use("/auth", require("./routes/auth"));
 app.use("/auth", require("./routes/google-auth"));
+app.use("/offers", require("./routes/offers"));
 
 // Health check
 app.get("/", (req, res) => res.json({ ok: true, service: "Podium Rare API" }));
