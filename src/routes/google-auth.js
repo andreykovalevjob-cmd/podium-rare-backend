@@ -93,8 +93,12 @@ router.get("/google/callback", async (req, res) => {
     }
 
     if (!user) {
-      // Email не найден — редирект с ошибкой
-      return res.redirect(`${APP_URL}/#login?error=not_registered&email=${encodeURIComponent(googleEmail)}`);
+      // Email не найден — редирект на страницу выбора роли для новой регистрации
+      const regParams = new URLSearchParams({
+        email: googleEmail,
+        name: googleName,
+      });
+      return res.redirect(`${APP_URL}/#google-register?${regParams}`);
     }
 
     // Выдать JWT
@@ -114,3 +118,35 @@ router.get("/google/callback", async (req, res) => {
 });
 
 module.exports = router;
+
+// POST /auth/google/register — создать аккаунт после Google OAuth и сразу выдать JWT
+router.post("/google/register", async (req, res) => {
+  const { email, name, role } = req.body;
+  if (!email || !name || !role || !["creator", "brand"].includes(role)) {
+    return res.status(400).json({ error: "email, name, role required" });
+  }
+
+  try {
+    let userId;
+
+    if (role === "creator") {
+      const result = await db.execute({
+        sql: "INSERT INTO creators (name, email, type, cities) VALUES (?, ?, ?, ?)",
+        args: [name, email.toLowerCase(), "ugc", JSON.stringify([])],
+      });
+      userId = Number(result.lastInsertRowid);
+    } else {
+      const result = await db.execute({
+        sql: "INSERT INTO brands (name, email) VALUES (?, ?)",
+        args: [name, email.toLowerCase()],
+      });
+      userId = Number(result.lastInsertRowid);
+    }
+
+    const jwtToken = jwt.sign({ user_id: userId, role }, JWT_SECRET, { expiresIn: "30d" });
+    res.json({ token: jwtToken, role, user_id: userId });
+  } catch (e) {
+    console.error("google/register error:", e.message);
+    res.status(500).json({ error: "Registration failed" });
+  }
+});
