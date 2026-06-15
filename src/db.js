@@ -93,7 +93,7 @@ async function init() {
     CREATE TABLE IF NOT EXISTS offers (
       id INTEGER PRIMARY KEY AUTOINCREMENT,
       from_type TEXT NOT NULL,        -- creator | brand
-      from_id INTEGER NOT NULL,       -- id в таблице creators или brands
+      from_id INTEGER,                 -- id в таблице creators или brands
       from_name TEXT NOT NULL,
       to_type TEXT NOT NULL,          -- creator | brand
       to_id INTEGER,                  -- id получателя (если известен)
@@ -121,6 +121,42 @@ async function init() {
   try { await db.execute("ALTER TABLE brands ADD COLUMN email TEXT"); } catch (_) {}
   try { await db.execute("ALTER TABLE brands ADD COLUMN phone TEXT"); } catch (_) {}
   try { await db.execute("ALTER TABLE brands ADD COLUMN city TEXT"); } catch (_) {}
+
+  // offers: recreate table without NOT NULL on from_id if it was created with constraint
+  try {
+    await db.execute(`
+      CREATE TABLE IF NOT EXISTS offers_new (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        from_type TEXT NOT NULL,
+        from_id INTEGER,
+        from_name TEXT NOT NULL,
+        to_type TEXT NOT NULL,
+        to_id INTEGER,
+        to_name TEXT,
+        description TEXT,
+        location TEXT,
+        dates TEXT,
+        brief TEXT,
+        budget_min INTEGER,
+        budget_max INTEGER,
+        negotiable INTEGER DEFAULT 0,
+        package TEXT,
+        status TEXT NOT NULL DEFAULT 'new',
+        notes TEXT,
+        created_at TEXT DEFAULT (datetime('now'))
+      )
+    `);
+    // check if old offers table has NOT NULL on from_id
+    const info = await db.execute("PRAGMA table_info(offers)");
+    const fromIdCol = info.rows.find(r => r.name === 'from_id');
+    if (fromIdCol && fromIdCol.notnull === 1) {
+      await db.execute("INSERT OR IGNORE INTO offers_new SELECT * FROM offers");
+      await db.execute("DROP TABLE offers");
+      await db.execute("ALTER TABLE offers_new RENAME TO offers");
+    } else {
+      await db.execute("DROP TABLE IF EXISTS offers_new");
+    }
+  } catch (_) {}
 }
 
 module.exports = { db, init };
