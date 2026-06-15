@@ -40,7 +40,22 @@ async function init() {
       bio TEXT,
       website TEXT,
       instagram TEXT,
+      email TEXT,
+      phone TEXT,
+      city TEXT,
       logo_url TEXT,
+      created_at TEXT DEFAULT (datetime('now'))
+    )
+  `);
+
+  await db.execute(`
+    CREATE TABLE IF NOT EXISTS magic_tokens (
+      id INTEGER PRIMARY KEY AUTOINCREMENT,
+      token TEXT NOT NULL UNIQUE,
+      user_id INTEGER NOT NULL,
+      role TEXT NOT NULL,
+      used INTEGER NOT NULL DEFAULT 0,
+      expires_at TEXT NOT NULL,
       created_at TEXT DEFAULT (datetime('now'))
     )
   `);
@@ -80,6 +95,9 @@ async function init() {
   try { await db.execute("ALTER TABLE creators ADD COLUMN website TEXT"); } catch (_) {}
   try { await db.execute("ALTER TABLE creators ADD COLUMN keywords TEXT"); } catch (_) {}
   try { await db.execute("ALTER TABLE registrations ADD COLUMN avatar_url TEXT"); } catch (_) {}
+  try { await db.execute("ALTER TABLE brands ADD COLUMN email TEXT"); } catch (_) {}
+  try { await db.execute("ALTER TABLE brands ADD COLUMN phone TEXT"); } catch (_) {}
+  try { await db.execute("ALTER TABLE brands ADD COLUMN city TEXT"); } catch (_) {}
 }
 
 module.exports = { db, init };
